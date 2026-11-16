@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Erstellt aus einem Bild einen druckfertigen Film für den Siebdruck – im Browser, ohne Upload.">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Siebdruck-Film</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <div class="app">
+    <aside class="sidebar">
+      <h1>Siebdruck-Film</h1>
+      <p class="subtitle">Positiv zum Belichten des Siebs · Druck im Maßstab 1:1</p>
+
+      <section class="group">
+        <h2 class="group-title">1 · Bild</h2>
+        <button type="button" class="btn btn-ghost" id="pick">Bild auswählen …</button>
+        <input type="file" id="file" accept="image/*" hidden>
+        <p class="hint" id="imgInfo">PNG oder JPG, am besten mit transparentem Hintergrund.</p>
+      </section>
+
+      <section class="group">
+        <h2 class="group-title">2 · Druckgröße</h2>
+        <label class="row">
+          <span>Format</span>
+          <select id="format">
+            <option value="free">Wie Motiv</option>
+            <optgroup label="Filmbogen">
+              <option value="A6">A6 – 10,5 × 14,8 cm</option>
+              <option value="A5">A5 – 14,8 × 21 cm</option>
+              <option value="A4" selected>A4 – 21 × 29,7 cm</option>
+              <option value="A3">A3 – 29,7 × 42 cm</option>
+            </optgroup>
+            <optgroup label="Druckbereich T-Shirt">
+              <option value="pocket">Logo / Tasche – 10 × 10 cm</option>
+              <option value="chest">Brust – 25 × 25 cm</option>
+              <option value="back">Rücken – 30 × 40 cm</option>
+            </optgroup>
+          </select>
+        </label>
+        <label class="row">
+          <span>Motivbreite</span>
+          <span class="field">
+            <input type="number" id="width" value="20" min="0.1" step="0.1">
+            <select id="unit">
+              <option value="cm">cm</option>
+              <option value="mm">mm</option>
+              <option value="in">Zoll</option>
+            </select>
+          </span>
+        </label>
+        <div class="row">
+          <span>Motivhöhe</span>
+          <span class="value" id="heightOut">–</span>
+        </div>
+        <label class="row">
+          <span>Auflösung (DPI)</span>
+          <select id="dpi">
+            <option>300</option>
+            <option selected>600</option>
+            <option>720</option>
+            <option>1200</option>
+          </select>
+        </label>
+        <p class="hint" id="pxOut">Das Format bestimmt die Größe des Filmbogens, das Motiv wird proportional eingepasst.</p>
+      </section>
+
+      <section class="group">
+        <h2 class="group-title">3 · Bearbeitung</h2>
+        <div class="segmented" id="modeSeg">
+          <button type="button" data-mode="threshold" class="active">Logo / Text</button>
+          <button type="button" data-mode="halftone">Foto / Verlauf</button>
+        </div>
+        <p class="hint" id="modeHint">Klare, vollflächige Linien. Der Schwellwert wird automatisch ermittelt.</p>
+
+        <details class="advanced">
+          <summary>Feineinstellungen (optional)</summary>
+
+          <div id="thresholdGroup" class="advanced-body">
+            <div class="row">
+              <span>Helligkeitsschwelle</span>
+              <span>
+                <button type="button" class="btn btn-ghost btn-small" id="autoThreshold">Auto</button>
+                <span class="value" id="thresholdVal">128</span>
+              </span>
+            </div>
+            <input type="range" id="threshold" min="1" max="254" value="128">
+            <p class="hint">Weiter links: dünnere Linien, weiter rechts: kräftigere Flächen.</p>
+          </div>
+
+          <div id="halftoneGroup" class="advanced-body" hidden>
+            <div class="row"><span>Rasterweite (LPI)</span><span class="value" id="lpiVal">50</span></div>
+            <input type="range" id="lpi" min="25" max="85" value="50">
+            <div class="row"><span>Rasterwinkel</span><span class="value" id="angleVal">22,5°</span></div>
+            <input type="range" id="angle" min="0" max="90" value="22.5" step="0.5">
+            <div class="row"><span>Kontrast</span><span class="value" id="contrastVal">0</span></div>
+            <input type="range" id="contrast" min="-60" max="60" value="0">
+            <p class="hint">Für T-Shirts sind 45–55 LPI bei 22,5° üblich.</p>
+          </div>
+
+          <label class="check"><input type="checkbox" id="invert"> Invertieren (Farbe und Freifläche tauschen)</label>
+        </details>
+      </section>
+
+      <section class="group">
+        <h2 class="group-title">4 · Stoff und Farbe <span class="group-note">(nur Vorschau)</span></h2>
+        <div class="row">
+          <span>Stofffarbe</span>
+          <span class="swatches">
+            <button type="button" class="swatch active" data-fabric="#ffffff" style="background: #ffffff" aria-label="Weiß"></button>
+            <button type="button" class="swatch" data-fabric="#111111" style="background: #111111" aria-label="Schwarz"></button>
+            <input type="color" id="fabricCustom" value="#c0392b" aria-label="Eigene Stofffarbe">
+          </span>
+        </div>
+        <div class="row">
+          <span>Druckfarbe</span>
+          <input type="color" id="inkColor" value="#000000" aria-label="Druckfarbe">
+        </div>
+        <p class="hint">Der Film wird immer schwarz gedruckt. Stoff- und Druckfarbe dienen nur der Vorschau.</p>
+      </section>
+
+      <section class="group">
+        <h2 class="group-title">5 · Filmoptionen</h2>
+        <label class="check"><input type="checkbox" id="mirror"> Horizontal spiegeln</label>
+        <label class="check"><input type="checkbox" id="marks" checked> Passer- und Schnittmarken</label>
+        <label class="check"><input type="checkbox" id="transparent"> Transparenter Hintergrund im PNG</label>
+      </section>
+
+      <button type="button" class="btn btn-primary" id="print" disabled>Film drucken (1:1)</button>
+      <button type="button" class="btn btn-ghost" id="png" disabled>PNG herunterladen</button>
+      <p class="hint">Im Druckdialog <b>Skalierung 100 %</b> bzw. <b>Tatsächliche Größe</b> und Ränder <b>0</b> wählen, sonst stimmt die Größe nicht.</p>
+    </aside>
+
+    <main class="stage">
+      <div class="stage-bar">
+        <div class="segmented" id="viewSeg">
+          <button type="button" data-view="film" class="active">Film</button>
+          <button type="button" data-view="fabric">Auf Stoff</button>
+        </div>
+        <div class="stage-meta" id="meta"></div>
+      </div>
+
+      <div class="canvas-wrap" id="wrap">
+        <canvas id="view"></canvas>
+        <div class="dropzone" id="drop">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" aria-hidden="true">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
+          </svg>
+          <p class="dropzone-title">Bild hierher ziehen</p>
+          <p>oder links auf „Bild auswählen“ klicken</p>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <div id="printArea"></div>
+
+  <script src="script.js"></script>
+</body>
+</html>
